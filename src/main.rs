@@ -6,6 +6,7 @@ enum BuiltinCommand {
     Exit,
     Echo,
     Type,
+    Pwd,
 }
 
 impl BuiltinCommand {
@@ -14,6 +15,7 @@ impl BuiltinCommand {
             "exit" => Some(BuiltinCommand::Exit),
             "echo" => Some(BuiltinCommand::Echo),
             "type" => Some(BuiltinCommand::Type),
+            "pwd" => Some(BuiltinCommand::Pwd),
             _ => None,
         }
     }
@@ -59,6 +61,10 @@ impl Command {
                         eprintln!("type: missing argument");
                     }
                 }
+                BuiltinCommand::Pwd => match std::env::current_dir() {
+                    Ok(pwd) => println!("{}", pwd.display()),
+                    Err(err) => eprintln!("pwd: failed to get current directory: {}", err),
+                },
             },
             Command::External(command, args) => {
                 if let Some(path) = find_executionable(command) {
