@@ -1,6 +1,12 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::process::{Command as OsCommand, Stdio};
+use std::{
+    env,
+    path::PathBuf,
+    process::{Command as OsCommand, Stdio},
+};
+
+use dirs::home_dir;
 
 enum BuiltinCommand {
     Exit,
@@ -68,9 +74,39 @@ impl Command {
                     Err(err) => eprintln!("pwd: failed to get current directory: {}", err),
                 },
                 BuiltinCommand::Cd => {
-                    let path = args.first().map(|s| s.as_str()).unwrap_or("/");
-                    if std::env::set_current_dir(path).is_err() {
-                        eprintln!("{}: No such file or directory", path);
+                    if let Some(path) = args.first() {
+                        let new_dir = if path == "~" {
+                            // Home directory
+                            home_dir().unwrap_or_else(|| PathBuf::from("/"))
+                        } else if path.starts_with('/') {
+                            // Absolute path
+                            PathBuf::from(path)
+                        } else {
+                            // Relative path
+                            let mut current_dir =
+                                env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
+                            for component in path.split('/') {
+                                match component {
+                                    "." => {}
+                                    ".." => {
+                                        if let Some(parent) = current_dir.parent() {
+                                            current_dir = parent.to_path_buf();
+                                        }
+                                    }
+                                    other => {
+                                        current_dir.push(other);
+                                    }
+                                }
+                            }
+                            current_dir
+                        };
+
+                        match env::set_current_dir(new_dir) {
+                            Ok(()) => {}
+                            Err(_) => eprintln!("{}: No such file or directory", path),
+                        }
+                    } else {
+                        eprintln!("cd: missing argument");
                     }
                 }
             },
