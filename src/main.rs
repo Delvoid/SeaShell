@@ -7,6 +7,7 @@ enum BuiltinCommand {
     Echo,
     Type,
     Pwd,
+    Cd,
 }
 
 impl BuiltinCommand {
@@ -16,6 +17,7 @@ impl BuiltinCommand {
             "echo" => Some(BuiltinCommand::Echo),
             "type" => Some(BuiltinCommand::Type),
             "pwd" => Some(BuiltinCommand::Pwd),
+            "cd" => Some(BuiltinCommand::Cd),
             _ => None,
         }
     }
@@ -65,6 +67,12 @@ impl Command {
                     Ok(pwd) => println!("{}", pwd.display()),
                     Err(err) => eprintln!("pwd: failed to get current directory: {}", err),
                 },
+                BuiltinCommand::Cd => {
+                    let path = args.first().map(|s| s.as_str()).unwrap_or("/");
+                    if std::env::set_current_dir(path).is_err() {
+                        eprintln!("{}: No such file or directory", path);
+                    }
+                }
             },
             Command::External(command, args) => {
                 if let Some(path) = find_executionable(command) {
