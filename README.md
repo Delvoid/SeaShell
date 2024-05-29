@@ -75,5 +75,17 @@ total 14192
 -rwxr-xr-x 1 root root   14328 Mar 27  2022 'acpi'
 ...
 
+$ cd /usr
+$ pwd
+/usr
+
+$ cd ./local/bin
+$ pwd
+/usr/local/bin
+
+$ cd ../../
+$ pwd
+/usr
+
 $ exit
 ```
